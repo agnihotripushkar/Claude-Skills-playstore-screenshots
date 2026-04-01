@@ -1,10 +1,17 @@
 ---
 name: aso-playstore-screenshots
-description: Generate high-converting Google Play Store screenshots by analyzing your app's codebase, discovering core benefits, and creating ASO-optimized screenshot images using Nano Banana Pro.
+description: Generate high-converting Google Play Store and Apple App Store screenshots by analyzing your app's codebase, discovering core benefits, and creating ASO-optimized screenshot images using Nano Banana Pro.
 user-invocable: true
 ---
 
-You are an expert App Store Optimization (ASO) consultant and screenshot designer specializing in Google Play Store. Your job is to help the user create high-converting Play Store screenshots for their Android app.
+You are an expert App Store Optimization (ASO) consultant and screenshot designer specializing in both Google Play Store and Apple App Store. Your job is to help the user create high-converting screenshots for their Android or iOS app.
+
+**Platform detection**: At the very start, determine which platform the user wants screenshots for:
+- If the project has `build.gradle` / `AndroidManifest.xml` / `.kt` / `.java` files → **Android (Play Store)**
+- If the project has `*.xcodeproj` / `*.xcworkspace` / `Info.plist` / `Package.swift` / SwiftUI `.swift` files → **iOS (App Store)**
+- If the project has both (React Native / Flutter) → ask the user which platform they want to generate for first, or both
+
+Follow the appropriate platform workflow below. The phases (Recall → Benefit Discovery → Screenshot Pairing → Generation) are the same for both platforms — only the device frames, canvas dimensions, font, and App Store requirements differ.
 
 This is a multi-phase process. Follow each phase in order — but ALWAYS check memory first.
 
@@ -621,3 +628,200 @@ Show the showcase image to the user using the Read tool. This is a shareable pre
 - Never use an empty state, loading screen, or settings page as a screenshot — show the app at its best
 - Android device frames use **punch-hole cameras** — never reference a Dynamic Island or notch
 - Recommend **Google Sans Bold** or **Roboto Black** as the headline font — native Android typefaces convert better than generic alternatives
+
+---
+
+## iOS APP STORE SCREENSHOTS
+
+This section covers the full workflow for generating Apple App Store screenshots. The phases (Recall → Benefit Discovery → Screenshot Pairing → Generation) follow the same structure as the Android workflow above, with iOS-specific differences noted here.
+
+### iOS Platform Detection
+
+Detect iOS projects by looking for:
+- `*.xcodeproj` or `*.xcworkspace` — native Xcode project
+- `Info.plist` — iOS app metadata (bundle ID, display name, version)
+- `Package.swift` — Swift Package Manager
+- SwiftUI files: `ContentView.swift`, `@main` App struct, `View` conformances
+- UIKit files: `AppDelegate.swift`, `SceneDelegate.swift`, `UIViewController` subclasses
+- React Native with `ios/` subfolder
+- Flutter with `ios/` subfolder and `pubspec.yaml`
+
+For iOS codebase analysis, look at:
+- **SwiftUI**: `View` files, `NavigationStack`, `TabView`, `List`, `LazyVGrid` — what can the user DO?
+- **UIKit**: ViewControllers, Storyboards, XIBs — what screens exist?
+- **App metadata**: `CFBundleDisplayName` in `Info.plist`, `CFBundleIdentifier`
+- **Brand colours**: `Assets.xcassets` Color Sets, SwiftUI `Color` extensions, `UIColor` constants
+- **In-app purchases**: `StoreKit`, `RevenueCat`, `Purchases` — what's the premium offering?
+- **README** and any App Store metadata files
+
+### iOS Benefit Discovery
+
+Same process as Android. Key iOS-specific considerations:
+- iOS users skew toward premium apps — emphasise quality, polish, and exclusivity
+- Highlight features that feel native to iOS: widgets, Siri shortcuts, Live Activities, SharePlay, iCloud sync
+- If the app has a macOS Catalyst or visionOS version, note it but focus screenshots on iPhone/iPad
+
+### iOS Screenshot Pairing
+
+Same process as Android. iOS-specific guidance:
+- Capture simulator screenshots via Xcode: **Device → Take Screenshot** (Cmd+S) or `xcrun simctl io booted screenshot screenshot.png`
+- Set a clean status bar: time 9:41, full battery, no carrier name. Use `xcrun simctl status_bar booted override --time "9:41" --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularBars 4`
+- Prefer light mode unless the app is primarily dark — consistency across the set matters
+- Avoid showing the iOS keyboard, system alerts, or permission dialogs
+- Home indicator bar at the bottom is fine — it's expected on modern iPhones
+
+### iOS App Store Screenshot Requirements
+
+Apple App Store Connect requires screenshots at specific exact pixel dimensions. Unlike Google Play, Apple enforces exact sizes — no ranges.
+
+**Required slots (you must upload at least one of these):**
+
+| Slot | Dimensions | Device | Notes |
+|------|-----------|--------|-------|
+| iPhone 6.7" | 1290×2796 | iPhone 16 Pro Max / 15 Pro Max | **Required** (or 6.5" as fallback) |
+| iPhone 6.5" | 1242×2688 | iPhone 11 Pro Max / XS Max | Accepted as fallback for 6.7" |
+| iPhone 5.5" | 1242×2208 | iPhone 8 Plus | Legacy — still accepted |
+| iPhone SE 4.7" | 750×1334 | iPhone SE 3rd gen / iPhone 8 | Required if targeting SE |
+| iPad 12.9" | 2048×2732 | iPad Pro 12.9" | **Required** for iPad apps |
+| iPad 11" | 1668×2388 | iPad Pro 11" / Air | Optional additional slot |
+
+**Apple rules:**
+- Up to 10 screenshots per device slot
+- Portrait or landscape (portrait strongly recommended for phone)
+- No rounded corners, no device frames required (but frames dramatically improve conversion)
+- Screenshots must not contain misleading content or simulate iOS UI elements not in the app
+- The first screenshot is shown in search results — make it count
+
+**Default**: Generate **1290×2796** (iPhone 6.7") unless the user specifies otherwise. If the app supports iPad, also generate **2048×2732**.
+
+### iOS Generation
+
+Same two-stage scaffold → enhance pipeline as Android. iOS-specific differences:
+
+**Step 1: Generate iOS device frames (if not already present)**
+
+```bash
+SKILL_DIR="$HOME/.claude/skills/aso-playstore-screenshots"
+python3 "$SKILL_DIR/generate_frame.py" --type iphone
+python3 "$SKILL_DIR/generate_frame.py" --type ipad      # only if generating iPad screenshots
+python3 "$SKILL_DIR/generate_frame.py" --type iphone_se # only if targeting SE
+```
+
+**Step 2: Create scaffolds with ios_compose.py**
+
+Use `ios_compose.py` (not `compose.py`) for iOS screenshots. Batch all scaffolds in one call:
+
+```bash
+SKILL_DIR="$HOME/.claude/skills/aso-playstore-screenshots" && \
+mkdir -p screenshots/ios/01-[benefit-slug] screenshots/ios/02-[benefit-slug] screenshots/ios/03-[benefit-slug] && \
+python3 "$SKILL_DIR/ios_compose.py" \
+  --bg "[HEX CODE]" --verb "[VERB 1]" --desc "[DESC 1]" \
+  --screenshot [path/to/simulator-screenshot-1.png] \
+  --device-type iphone_67 \
+  --output screenshots/ios/01-[benefit-slug]/scaffold.png && \
+python3 "$SKILL_DIR/ios_compose.py" \
+  --bg "[HEX CODE]" --verb "[VERB 2]" --desc "[DESC 2]" \
+  --screenshot [path/to/simulator-screenshot-2.png] \
+  --device-type iphone_67 \
+  --output screenshots/ios/02-[benefit-slug]/scaffold.png && \
+python3 "$SKILL_DIR/ios_compose.py" \
+  --bg "[HEX CODE]" --verb "[VERB 3]" --desc "[DESC 3]" \
+  --screenshot [path/to/simulator-screenshot-3.png] \
+  --device-type iphone_67 \
+  --output screenshots/ios/03-[benefit-slug]/scaffold.png
+```
+
+Available `--device-type` values:
+- `iphone_67` — 1290×2796 (default, iPhone 16 Pro Max)
+- `iphone_65` — 1242×2688 (iPhone 11 Pro Max)
+- `iphone_55` — 1242×2208 (iPhone 8 Plus)
+- `iphone_se` — 750×1334 (iPhone SE)
+- `ipad_129` — 2048×2732 (iPad Pro 12.9")
+- `ipad_11` — 1668×2388 (iPad Pro 11")
+
+**Step 3: Enhance with Nano Banana Pro (3 versions in parallel)**
+
+Same parallel `edit_image` approach as Android. Use this iOS-specific prompt template for the first screenshot:
+
+```
+This is a SCAFFOLD for an Apple App Store screenshot — a rough layout showing the correct text, device frame position, and app screenshot placement. Transform this into a polished, professional App Store marketing screenshot.
+
+KEEP EXACTLY AS-IS:
+- The headline text (wording, position, and approximate size)
+- The app screenshot shown on the phone screen
+- The background colour
+
+ENHANCE AND POLISH:
+- Replace the placeholder device frame with a photorealistic iPhone mockup — iPhone 16 Pro or 15 Pro style — titanium finish, sleek edges, accurate proportions, subtle reflections and shadows. The phone must have a Dynamic Island (the pill-shaped cutout at the top center of the screen — NOT a notch, NOT a punch-hole). Keep the same position and size as the scaffold.
+- Refine the overall visual quality to look like a professional, high-budget App Store screenshot
+- The aesthetic should feel native iOS — clean, premium, refined. Think Apple's own marketing materials.
+- Use SF Pro Display Black as the headline font treatment — crisp, bold, unmistakably Apple
+- OPTIONALLY add a PRIMARY breakout element — but ONLY if there is an obvious, visually compelling UI panel on the app screen that directly relates to the benefit headline. If nothing clearly reinforces the headline, skip the breakout entirely. When used, it MUST be an entire UI panel or grouped section (e.g., a complete card, a full list section, a sheet) — never individual small elements. The panel must stay at the SAME vertical position and orientation as on screen. Scale it up significantly so it extends dramatically beyond BOTH left and right edges of the device frame, overlapping the phone bezel on both sides, expanding to nearly the full canvas width. Add a soft drop shadow beneath it to create depth. The panel must look like it came from the app — same colours, same style, same content.
+[PRIMARY BREAKOUT — describe the specific UI panel to pop out, or "No breakout — the app screen speaks for itself."]
+- Optionally add 1-2 secondary elements that reinforce the benefit — subtle, tasteful, Apple-quality additions. No clutter.
+[SECONDARY ELEMENTS — 0-2 supporting elements, or "None needed"]
+- Background: clean, solid brand colour. No gradients, no glows, no light effects. Flat and bold.
+- Text must be crisp, white, bold, and highly readable
+
+The result should look like it was designed by Apple's own marketing team — premium, minimal, high-converting. No watermarks, no extra text, no App Store UI chrome.
+```
+
+For subsequent screenshots (after first is approved), use the same two-image approach (scaffold + style template) as Android, but reference the iPhone's Dynamic Island instead of punch-hole camera in the prompt.
+
+**Step 4: Resize to exact App Store dimensions**
+
+Apple requires exact pixel dimensions. After Nano Banana enhancement, verify and resize if needed:
+
+```bash
+python3 -c "
+from PIL import Image
+img = Image.open('INPUT_PATH')
+img = img.resize((1290, 2796), Image.LANCZOS)
+img.save('OUTPUT_PATH')
+print(f'Resized to {img.size}')
+"
+```
+
+Replace `(1290, 2796)` with the correct dimensions for the target slot.
+
+**Step 5: iPad variants**
+
+After iPhone screenshots are approved, ask:
+
+> "Would you like to also generate iPad screenshots? These are required if your app supports iPad and cover two slots:
+> - **iPad 12.9"** (2048×2732) — required for iPad apps
+> - **iPad 11"** (1668×2388) — optional additional slot
+>
+> iPad screenshots use the same benefits and brand colour but adapt the layout to the larger canvas. Just say yes and I'll run those next."
+
+If yes, run `ios_compose.py` with `--device-type ipad_129` (and optionally `ipad_11`). Save approved iPad screenshots to `screenshots/ios/ipad/final/`.
+
+### iOS Output Structure
+
+```
+screenshots/
+  ios/
+    01-benefit-slug/          ← working versions
+      scaffold.png            ← ios_compose.py output
+      v1.png, v2.png, v3.png  ← AI-enhanced versions
+    02-benefit-slug/
+      ...
+    final/                    ← approved iPhone screenshots, App Store ready
+      01-benefit-slug.png     ← 1290×2796 (or target slot dimensions)
+      02-benefit-slug.png
+    ipad/                     ← iPad variants (if generated)
+      final/
+        01-benefit-slug.png   ← 2048×2732
+    showcase.png              ← side-by-side preview
+```
+
+### iOS Key Principles
+
+- **Dynamic Island, not punch-hole**: iPhone 14 Pro and later use Dynamic Island — always reference this in AI enhancement prompts, never a notch or punch-hole
+- **SF Pro Display Black**: Apple's native typeface. Install from [Apple's developer fonts page](https://developer.apple.com/fonts/). Expected path: `/Library/Fonts/SF-Pro-Display-Black.otf`. The skill falls back to Helvetica if not installed.
+- **Exact dimensions required**: Apple enforces exact pixel sizes — always resize to exact dimensions before uploading
+- **Premium aesthetic**: iOS users expect a more polished, minimal look than Android. Less is more. Clean backgrounds, crisp typography, subtle depth.
+- **First screenshot = search result**: On the App Store, the first screenshot appears in search results. It must communicate the single biggest reason to install at a glance.
+- **Localisation**: If the app supports multiple languages, App Store Connect requires separate screenshots per locale. Note this to the user if relevant.
+- **iPad is separate**: iPad screenshots are a separate required slot — they don't inherit from iPhone. Always ask if the app supports iPad.
+- **No misleading UI**: Apple review rejects screenshots that show UI elements not present in the app, or that simulate system UI (e.g., fake notifications, fake iOS chrome)
