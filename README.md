@@ -15,7 +15,7 @@ A Claude Code skill that generates high-converting Google Play Store screenshots
 ### 1. Add the skill to Claude Code
 
 ```bash
-claude install-skill github.com/YOUR_USERNAME/claude-skill-aso-playstore-screenshots
+claude install-skill github.com/agnihotripushkar/claude-skill-aso-playstore-screenshots
 ```
 
 ### 2. Install Python dependencies
