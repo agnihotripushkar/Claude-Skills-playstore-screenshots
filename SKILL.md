@@ -54,14 +54,37 @@ This phase sets the foundation for everything. The goal is to identify the 3-5 a
 
 ### Step 1: Analyze the Codebase
 
-Explore the project codebase thoroughly. Look at:
-- UI files, Activities, Fragments, Composables, screens, components — what can the user actually DO in this app?
+First, detect the project framework by checking for these markers:
+- **Native Android (Kotlin/Java)**: `build.gradle` or `build.gradle.kts` with `applicationId`, `AndroidManifest.xml`, `*.kt`/`*.java` source files
+- **React Native**: `package.json` with `react-native` dependency, `App.tsx`/`App.jsx`, `android/` subfolder
+- **Flutter**: `pubspec.yaml` with `flutter:` section, `lib/` directory with `.dart` files
+
+Then explore the project codebase thoroughly using the appropriate lens for the detected framework:
+
+**Native Android (Kotlin/Java/Compose)**
+- UI files: Activities, Fragments, Composables, XML layouts — what can the user DO?
 - Models and data structures — what domain does this app operate in?
 - Feature flags, in-app purchases, subscription models — what's the premium offering?
 - Onboarding flows — what does the app highlight first?
-- App name, package ID (applicationId), any marketing copy in the code
+- App name and package ID from `applicationId` in `build.gradle`
 - README, Play Store description files, store listing metadata if present
-- Material You / Material Design 3 theming — what design language does the app use?
+- Material You / Material Design 3 theming — `colors.xml`, `themes.xml`, `styles.xml`, Compose `Theme.kt`
+
+**React Native**
+- Screen files: `screens/`, `pages/`, `views/`, `components/` — `.tsx`/`.jsx` files
+- Navigation structure: what screens exist and how are they connected?
+- App name and bundle ID from `app.json`, `app.config.ts`, or `package.json`
+- Brand colors and theme: `theme.ts`, `colors.ts`, `constants/`, `StyleSheet` definitions, styled-components, NativeWind config
+- In-app purchases or premium features: look for `react-native-iap`, `expo-in-app-purchases`, or similar
+- README, store listing copy if present
+
+**Flutter (Dart)**
+- Screen/page files: `lib/screens/`, `lib/pages/`, `lib/views/`, `lib/features/` — `.dart` files
+- Widget hierarchy — what UI does the app present?
+- App name and package ID from `pubspec.yaml` and `android/app/build.gradle`
+- Brand colors and theme: `ThemeData`, `ColorScheme`, `MaterialColor` definitions — typically in `lib/theme/`, `lib/core/`, or `main.dart`
+- In-app purchases or premium features: `in_app_purchase`, `purchases_flutter`, or similar packages in `pubspec.yaml`
+- README, store listing copy if present
 
 From this analysis, build a mental model of:
 - What the app does (core functionality)
@@ -73,7 +96,7 @@ From this analysis, build a mental model of:
 
 After your analysis, present what you've learned and ask the user targeted questions to fill gaps:
 
-- "Based on the code, this appears to be [X]. Is that right?"
+- "Based on the code, this appears to be [X] built with [framework]. Is that right?"
 - "Who is your target audience? (age, interests, skill level)"
 - "What niche does this app serve?"
 - "What's the #1 reason someone downloads this app?"
@@ -501,7 +524,10 @@ Generate and approve foldable variants using the same two-stage scaffold → enh
 
 Do NOT ask the user to pick a background colour. Instead, determine the best one automatically:
 
-1. **Analyse the codebase** — check for accent colours, tint colours, brand colours in `colors.xml`, theme files, Material You colour tokens, `styles.xml`, `themes.xml`, Compose theme files
+1. **Analyse the codebase** — check for brand colours based on the project framework:
+   - **Native Android**: `colors.xml`, `themes.xml`, `styles.xml`, Material You colour tokens, Compose `Theme.kt`
+   - **React Native**: `theme.ts`/`colors.ts`/`constants.ts`, `StyleSheet` colour values, NativeWind / Tailwind config, styled-components theme
+   - **Flutter**: `ThemeData`/`ColorScheme`/`MaterialColor` in `main.dart` or `lib/theme/`, `pubspec.yaml` accent references
 2. **Study the emulator screenshots** — what are the dominant colours in the UI? What colour palette does the app use?
 3. **Consider the app's domain and audience** — a game can go bold and playful, a finance app needs confident and trustworthy colours
 
@@ -587,6 +613,7 @@ Show the showcase image to the user using the Read tool. This is a shareable pre
 - **Action-oriented**: Every headline starts with a strong verb
 - **User-centric**: Frame everything from the installer's perspective
 - **Conversion-focused**: Every decision should answer "will this make someone tap Install?"
+- **Framework-agnostic**: Works with Native Android (Kotlin/Compose/XML), React Native, and Flutter — detect the framework first, then adapt codebase analysis accordingly
 - **Material You aware**: Android users are accustomed to Google's Material You design language — screenshots should feel at home in that world: clean, expressive, adaptive
 - The first screenshot is the most important — it must communicate the single biggest reason to install
 - Screenshots should tell a story when swiped through — each one reveals a new compelling reason
